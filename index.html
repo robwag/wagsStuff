@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+
+<html lang="en">
+<head>
+  <title>untitled</title>
+	<script src="protoObjects.js"></script>
+	<script src="names.js"></script>
+<script>
+/*********  
+We will start with what I will call abstract functions
+basically the forumla for this is
+function AbstractSomething() {
+	if (this instanceof AbstractSomething) throw ("ERROR") -- catch if called with new operator 
+	...body...
+	this.parent=AbstractParent 
+	return null;  if you directly invoke this function it will return nothing  
+}
+
+So basically you would take any function that you would use the new operator with and add the 1st line, the last line and optionally the this.parent property if you want it to inherit from another abstract function
+************/
+function AbstractMammal() { //  'abstract' prototype function that you create 'concrete'  object from
+	if (this instanceof AbstractMammal) throw ("ERROR:  I am not letting you use the new operator for some reason that I shall not bother to explain, but henceforth you should blindly follow this practice."); // if you use new error - you probably would want to catch this error
+	var x = 'mammal';
+	this.x=[3,2,1];
+	this.y={a:3};
+	this.makeSound = function(text) {
+		console.log(text);
+	}
+	this.talk = function(text) {
+		this.makeSound(text);
+	}
+	this.getX = function() {
+		return x;
+	}
+	this.setX= function(v) {x=v;return x;}
+	
+	return null; // If you directly invoke it it returns nothing		
+}
+
+function AbstractHuman() { //	
+	if (this instanceof AbstractHuman) throw ("ERROR"); 
+	var x = 'human';
+	this.first;
+	this.last;
+	
+	this.hello = function() {
+		console.log('hello')
+	}
+	this.getX = function() {
+		return x;
+	}
+	this.setX=function (v) {x=v;}
+	this.fullName= function() {
+		return this.first+' '+this.last
+	}
+	this.talk = function talk(str) {
+		talk.parent.call(this, str+' - '+this.fullName());
+		return str;
+	}
+	this.parent=AbstractMammal
+	return null; // If you directly invoke it it returns nothing	
+}
+function AbstractMale() {
+	if (this instanceof AbstractMale) throw ("ERROR"); 
+	var sex='male',
+		yChromosome=true;
+	this.sex=function() { return sex;}
+	this.born= new Date()
+	this.talk = function talk() {
+		talk.parent.call(this, 'hey baby');
+		return true;
+	}
+	this.parent=AbstractHuman
+	return null; 			
+}
+
+function AbstractFemale() {
+	if (this instanceof  AbstractFemale) throw ("ERROR"); 
+	var sex='female'
+	this.sex=function() { return sex;}
+	this.yChromosome=false
+	this.talk = function talk() {
+		talk.parent.call(this, 'hey daddy');
+		return true;
+	}
+	this.parent=AbstractHuman
+	return null; 			
+}
+
+/********* 
+This one will be used like a trait/helperclass - maybe it should be called AbstractTraitActions.
+*********/
+function TraitActions() { 
+	if (this instanceof TraitActions) throw ("ERROR");
+	var totalJumps=0;
+	this.walk =function() {		
+	}
+	this.run =function() {}
+	this.jump = function() {
+		console.log('I\'m jumping','totalJumps :'+(totalJumps+=1));
+		
+		return this;
+	}
+	return null;
+}
+
+/*********
+This would be the simplest way to use these Abstract Functions
+$proto.makeObjectFromAbstract will create what I am calling a Proto Object
+It is an object with everything from the abstract function and it's parent chain in it's prototype
+read the comments on the actual function to see how name collisions are dealt with
+*********/
+var male = $proto.makeObjectFromAbstract(AbstractMale);
+var female = $proto.makeObjectFromAbstract(AbstractFemale);
+/********* Since both of these abstract functions have AbstractHuman as parent which in turn has AbstractMammal as it's parent these two will be merged into the Proto Objects
+Now there are two ways we might want to add the Trait function
+*********/
+male.addTrait(TraitActions);
+/*********
+The above will directly add the functions to male.prototype.
+read the comments on the actual function to see how name collisions are dealt with
+*********/
+$proto.addTraitToProperty(female,TraitActions,'action');
+/*********
+The above will add the functions to female.prototype.action.
+This will avoid any name collisions
+*********/
+//console.log(male);
+//console.log(female);
+/*********
+Now we have two Proto Objects male and female.
+The next step would be to make some instances
+*********/
+function randName() {
+		var letters = "abcdefghijklmnopqrstuvwxyz";
+		var str = '';;
+		for (var i = 0; i < 10; i++) {
+			str += letters[Math.floor(Math.random() * 25)]
+		}
+		return str;
+	}
+
+var n = 20000,
+	humans = [];
+console.log((new Date()));
+for (var i = 0, j=0; i < n; i+=2) {
+	// when we make an instance it will move all non function properties to the instance so that they will be individual
+	humans.push($proto.makeInstance(male, {
+		first: names[j][0],
+		last: names[j][1],
+		born: new Date(1900 + Math.random() * 90, 12 * Math.random(), 30 * Math.random())
+	}))
+
+	humans.push($proto.makeInstance(female, {
+		first: names[j+1][0],
+		last: names[j+1][1],
+		born: new Date(1900 + Math.random() * 90, 12 * Math.random(), 30 * Math.random())
+	})) 
+	j+=2;
+	if (j===1000)j=0
+}
+	for (i=0;i<10;i++) {
+		console.log(humans[i])
+	}
+	
+
+
+
+	</script>
+	</head>
+	<body>
+
+	</body>
+	</html>	
