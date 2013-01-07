@@ -5,36 +5,45 @@ var $proto = (function () {
 ******************************/
     // What we have here are functions that allow you to make prototypical inheritance without the new operator.  Not sure there is any advantage to this but it was a mental exercise.  
 
-  // this is a utility function to clone an object.  Functions are the only things that will become a reference.
-	function copyObject(prop) {
-		if (Object.prototype.toString.call( prop )!=='[object Object]' && 
-			Object.prototype.toString.call( prop )!=='[object Array]') {
-				return prop;
-		}
-		var newprop,
-			i,
-			n; 
-		if( Object.prototype.toString.call( prop ) === '[object Array]' ) {
-			newprop=[];
-			n=prop.length;
-			for (i=0;i<n;i++) {
-				if (typeof prop[i]==='object') { newprop[i]=copyObject(prop[i]); }
-				else { newprop[i]=prop[i]; }
-			}
-		}
-		else {
-			newprop={};
-			for (i in prop) {
-				if (prop.hasOwnProperty(i)) {
-					if (typeof prop[i]==='object') { newprop[i]=copyObject(prop[i]); }
-					else { newprop[i]=prop[i]; }	
-				}
-			}
-		}
-	
-		return newprop;
-	}
-    //	this is a utility function that returns an object of prototypes merged.  This way you don't end up having a long prototype chain.  If a function already exists it becomes a 'parent' property and a flag and string are set: childFunction.hasParent=1 and childFunction.explainParent=function() {...}.  Thus you can check if and what you might be overriding and call the parent version if needed: childFunction.parent() or childFunction.parent.parent() etc...
+    // this is a utility function to clone an object.  Functions are the only things that will remain a reference.  
+    //Maybe I actually need turn date objects into new date objects...
+    function copyObject(prop) {
+        if (Object.prototype.toString.call(prop) !== '[object Object]' && Object.prototype.toString.call(prop) !== '[object Array]') {
+            return prop;
+        }
+        var newprop,
+        i,
+        n;
+        if (Object.prototype.toString.call(prop) === '[object Array]') {
+            newprop = [];
+            n = prop.length;
+            for (i = 0; i < n; i++) {
+                if (typeof prop[i] === 'object') {
+                    newprop[i] = copyObject(prop[i]);
+                } else {
+                    newprop[i] = prop[i];
+                }
+            }
+        } else {
+            newprop = {};
+            for (i in prop) {
+                if (prop.hasOwnProperty(i)) {
+                    if (typeof prop[i] === 'object') {
+                        newprop[i] = copyObject(prop[i]);
+                    } else {
+                        newprop[i] = prop[i];
+                    }
+                }
+            }
+        }
+
+        return newprop;
+    }
+    //	this is a utility function that returns an object of prototypes merged.  
+    // This way you don't end up having a long prototype chain.  
+    // If a function already exists it becomes a 'parent' property and a flag and string are set: childFunction.hasParent=1 and childFunction.explainParent=function() {...}.  
+    //Thus you can check if and what you might be overriding and call the parent version if needed: 	    
+    //childFunction.parent() or childFunction.parent.parent() etc...
 
     //function extendProtoObject(child,parent,grandparent...)
     function extendProtoObject() {
@@ -44,7 +53,7 @@ var $proto = (function () {
             var s = arguments[i];
             for (var k in s) {
                 if (k !== 'prototype') {
-                    switch (typeof o[k]) { 
+                    switch (typeof o[k]) {
                         case 'function':
                             o[k].hasParent = 1;
                             o[k].explainParent = s[k].toString();
@@ -123,7 +132,7 @@ var $proto = (function () {
         return newobj;
     }
 
-	
+
     return {
 
 
@@ -145,22 +154,23 @@ var $proto = (function () {
         },
         //  makes instances of your concrete object.  It clones the Proto Object and adds any properties supplied.  The end product is an object with all of it's inherited methods and properties in it's prototype and only properties unique to it assigned directly
         makeInstance: function instance(obj, props) {
-			var p, proto={};
-			for (p in obj.prototype) { 
-				if (obj.prototype.hasOwnProperty(p)) {
-					if (typeof obj.prototype[p]==='function') {
-						proto[p]=obj.prototype[p];
-					}
-					else { 
-						if (!props[p]) { props[p]=obj.prototype[p]}
-					}
-				}
-			}
+            var p, proto = {};
+            for (p in obj.prototype) {
+                if (obj.prototype.hasOwnProperty(p)) {
+                    if (typeof obj.prototype[p] === 'function') {
+                        proto[p] = obj.prototype[p];
+                    } else {
+                        if (!props[p]) {
+                            props[p] = obj.prototype[p]
+                        }
+                    }
+                }
+            }
             var o = Object.create(proto);
             o.prototype = proto;
             if (typeof props === 'object') {
                 for (var p in props) {
-                    if (props.hasOwnProperty(p)) {							
+                    if (props.hasOwnProperty(p)) {
                         o[p] = copyObject(props[p]);
                     }
                 }
@@ -176,9 +186,9 @@ var $proto = (function () {
             return newobj;
         },
         // this is a function to add the trait to a property name of the Proto Objects prototype- i.e. obj.prototype.prop - avoid name collisions this way.
-		addTraitToProperty:function addTraitToProperty(obj,trait,prop) {
-			obj.prototype[prop]=makeProtoObjectFromAbstract(trait)
-	},
+        addTraitToProperty: function addTraitToProperty(obj, trait, prop) {
+            obj.prototype[prop] = makeProtoObjectFromAbstract(trait)
+        },
         // This function will allow you to  merge 2 abstract prototypes as in:
         // var Human_proto = extendAbstract(AbstractMammal, AbstractHuman);
         // of note is that private variables remain private to each function but child properties will override parent properties with same name i.e. if they both had getX(){return x;} getX() would return child var x
